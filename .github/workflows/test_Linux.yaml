@@ -173,14 +173,14 @@ jobs:
 
         steps:
           - name: Checkout repository
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             uses: actions/checkout@v4
             with:
               path: main
               filter: "blob:none" #https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone/
     
           - name: Install CoreUtils & Deps
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             run: |
               #presets
               set -x ; set +e
@@ -195,7 +195,7 @@ jobs:
             continue-on-error: true
 
           - name: Setup Env
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             run: |
               #presets
               set -x ; set +e
@@ -216,7 +216,7 @@ jobs:
             continue-on-error: true
 
           - name: Install Addons
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             run: |
               # Presets
               set +x ; set +e
@@ -226,16 +226,16 @@ jobs:
             continue-on-error: true
 
           - name: Set up QEMU
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             uses: docker/setup-qemu-action@v3
             continue-on-error: true
           - name: Set up Docker Buildx
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             uses: docker/setup-buildx-action@v3
             continue-on-error: true
 
           - name: Run Container
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             run: |
                # Presets
                set +x ; set +e
@@ -249,7 +249,7 @@ jobs:
             continue-on-error: true
 
           - name: Build Binaries (aarch64-Linux)
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             run: |
               #presets
               set -x ; set +e
@@ -291,7 +291,7 @@ jobs:
             continue-on-error: true
 
           - name: Archive Binaries (.tar)
-            if: SKIP_AARCH64 != 'YES'
+            if: env.SKIP_AARCH64 != 'YES'
             run: |
               #presets
               set -x ; set +e
