@@ -19,7 +19,7 @@ fi
 
 #-------------------------------------------------------#
 ##Main
-SKIP_BUILD="YES" #Takes > 1 HR
+SKIP_BUILD="NO" #Takes > 1 HR
 if [ "$SKIP_BUILD" == "NO" ]; then
     #imagemagick : A software suite to create, edit, compose, or convert bitmap images
      export BIN="imagemagick"
