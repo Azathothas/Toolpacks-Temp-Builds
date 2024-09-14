@@ -72,7 +72,7 @@ jobs:
              set +x ; set +e
              #--------------#
              sudo mkdir -p "/var/lib/containers/tmp"
-             sudo podman run --platform="linux/amd64" --detach --rm --privileged --network="bridge" --systemd="always" --volume="/var/lib/containers/tmp:/tmp" --tz="UTC" --pull="always" --name="ubuntu-builder" "docker.io/azathothas/ubuntu-systemd-base:latest"
+             sudo podman run --platform="linux/amd64" --detach --rm --privileged --network="bridge" --systemd="always" --tz="UTC" --pull="always" --name="ubuntu-builder" "docker.io/azathothas/ubuntu-systemd-base:latest"
              sleep 10
              BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
              echo "BUILDER_ID=${BUILDER_ID}" >> "$GITHUB_ENV"
@@ -87,6 +87,7 @@ jobs:
             #Build 
             pushd "$(mktemp -d)" >/dev/null 2>&1
             sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c '
+            set +e ; set -x
             #Setup ENV_VARS
                GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
                SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
@@ -107,7 +108,7 @@ jobs:
             #Copy
                sudo rsync -av --copy-links "${BINDIR}/." "/build-bins/"
                sudo rsync -av --copy-links "${BASEUTILSDIR}/." "/build-bins/"
-               sudo ls "/build-bins" -lah
+               sudo ls "/build-bins" -lah ; set +x
             '
             #Copy
             sudo podman cp "ubuntu-builder:/build-bins/." "$(pwd)/"
@@ -213,7 +214,7 @@ jobs:
                set +x ; set +e
                #--------------#
                sudo mkdir -p "/var/lib/containers/tmp"
-               sudo podman run --platform="linux/arm64" --detach --rm --privileged --network="bridge" --systemd="always" --volume="/var/lib/containers/tmp:/tmp" --tz="UTC" --pull="always" --name="ubuntu-builder" "docker.io/azathothas/ubuntu-systemd-base:latest"
+               sudo podman run --platform="linux/arm64" --detach --rm --privileged --network="bridge" --systemd="always" --tz="UTC" --pull="always" --name="ubuntu-builder" "docker.io/azathothas/ubuntu-systemd-base:latest"
                sleep 10
                BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
                echo "BUILDER_ID=${BUILDER_ID}" >> "$GITHUB_ENV"
@@ -228,6 +229,7 @@ jobs:
               #Build 
               pushd "$(mktemp -d)" >/dev/null 2>&1
               sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c '
+              set +e ; set -x
               #Setup ENV_VARS
                  GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
                  SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
@@ -248,7 +250,7 @@ jobs:
               #Copy
                  sudo rsync -av --copy-links "${BINDIR}/." "/build-bins/"
                  sudo rsync -av --copy-links "${BASEUTILSDIR}/." "/build-bins/"
-                 sudo ls "/build-bins" -lah
+                 sudo ls "/build-bins" -lah ; set +x
               '
               #Copy
               sudo podman cp "ubuntu-builder:/build-bins/." "$(pwd)/"
