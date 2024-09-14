@@ -1,0 +1,384 @@
+name: 🛍️ Test 📦 (aarch64 || x86_64) Linux Build 📦🗄️
+on:
+  workflow_dispatch:
+
+#------------------------------------------------------------------------------------#
+jobs:
+    build-x86_64-Linux:
+      name: Build On (x86_64-Linux)
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+      
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            path: main
+            filter: "blob:none"
+            
+        - name: Install CoreUtils & Deps
+          run: |
+            #presets
+            set -x ; set +e
+            #-------------#     
+            export DEBIAN_FRONTEND="noninteractive"
+            sudo apt update -y -qq
+            sudo apt install 7zip b3sum bc binutils binutils-aarch64-linux-gnu coreutils curl dos2unix fdupes jq moreutils wget -y -qq
+            sudo apt-get install apt-transport-https apt-utils ca-certificates binutils binutils-aarch64-linux-gnu coreutils dos2unix fdupes gnupg2 jq moreutils p7zip-full rename rsync software-properties-common texinfo tmux upx util-linux wget -y -qq 2>/dev/null ; sudo apt-get update -y 2>/dev/null
+            #Do again, sometimes fails
+            sudo apt install 7zip b3sum bc binutils binutils-aarch64-linux-gnu coreutils curl dos2unix fdupes jq moreutils wget -y -qq
+            sudo apt-get install apt-transport-https apt-utils ca-certificates binutils binutils-aarch64-linux-gnu coreutils dos2unix fdupes gnupg2 jq moreutils p7zip-full rename rsync software-properties-common texinfo tmux upx util-linux wget -y -qq2>/dev/null ; sudo apt-get update -y 2>/dev/null
+          continue-on-error: true
+
+        - name: Setup Env
+          run: |
+            #presets
+            set -x ; set +e
+            #-------------#
+            ##tmp
+            SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
+            echo "SYSTMP=${SYSTMP}" >> "$GITHUB_ENV"
+            ##Artifacts
+            ARTIFACTS="${SYSTMP}/ARTIFACTS-$(uname -m)-$(uname -s)" && export "ARTIFACTS=${ARTIFACTS}"
+            echo "ARTIFACTS=${ARTIFACTS}" >> "$GITHUB_ENV"
+            ##Rclone
+            mkdir -p "$HOME/.config/rclone"
+            echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
+            ##User-Agent
+            USER_AGENT="$(curl -qfsSL 'https://pub.ajam.dev/repos/Azathothas/Wordlists/Misc/User-Agents/ua_chrome_macos_latest.txt')" && export USER_AGENT="$USER_AGENT"
+            echo "USER_AGENT=$USER_AGENT" >> "$GITHUB_ENV"
+          continue-on-error: true
+
+        - name: Install Addons
+          run: |
+            # Presets
+            set +x ; set +e
+            #--------------#
+            #https://github.com/Azathothas/Arsenal/blob/main/misc/Linux/install_bb_tools.sh
+            bash <(curl -qfsSL "https://pub.ajam.dev/repos/Azathothas/Arsenal/misc/Linux/install_bb_tools.sh")
+          continue-on-error: true
+  
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+          continue-on-error: true
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+          continue-on-error: true
+
+        - name: Run Container
+          run: |
+             # Presets
+             set +x ; set +e
+             #--------------#
+             sudo mkdir -p "/var/lib/containers/tmp"
+             sudo podman run --platform="linux/amd64" --detach --rm --privileged --network="bridge" --systemd="always" --volume="/var/lib/containers/tmp:/tmp" --tz="UTC" --pull="always" --name="ubuntu-builder" "docker.io/azathothas/ubuntu-systemd-base:latest"
+             sleep 10
+             BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
+             echo "BUILDER_ID=${BUILDER_ID}" >> "$GITHUB_ENV"
+             sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
+          continue-on-error: true
+
+        - name: Build Binaries (x86_64-Linux)
+          run: |
+            #presets
+            set -x ; set +e
+            #-------------#
+            #Build 
+            pushd "$(mktemp -d)" >/dev/null 2>&1
+            sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c '
+            #Setup ENV_VARS
+               GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
+               SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
+               mkdir -p "$HOME/.config/rclone" && echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
+               USER_AGENT="$(curl -qfsSL 'https://pub.ajam.dev/repos/Azathothas/Wordlists/Misc/User-Agents/ua_chrome_macos_latest.txt')" && export USER_AGENT="$USER_AGENT"
+            #Setup ENV_BUILD
+               sudo mkdir -p "/build-bins"
+               #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
+               source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
+               echo -e "\n\n\n" && env && echo -e "\n\n\n"
+            #Build
+               pushd "$($TMPDIRS)" >/dev/null 2>&1
+               git clone --filter "blob:none" "https://github.com/Azathothas/Toolpacks-Temp-Builds" && cd "./Toolpacks-Temp-Builds"
+               bash "./build_on_$(uname -m)-$(uname -s).sh"
+               echo -e "\n\n\n" && realpath "${BINDIR}" && ls "${BINDIR}" -lah
+               echo -e "\n\n\n" && realpath "${BASEUTILSDIR}" && ls "${BASEUTILSDIR}" -lah
+               popd >/dev/null 2>&1
+            #Copy
+               sudo rsync -av --copy-links "${BINDIR}/." "/build-bins/"
+               sudo rsync -av --copy-links "${BASEUTILSDIR}/." "/build-bins/"
+               sudo ls "/build-bins" -lah
+            '
+            #Copy
+            sudo podman cp "ubuntu-builder:/build-bins/." "$(pwd)/"
+            find "." -maxdepth 1 -type f -exec sh -c 'file "{}"; du -sh "{}"' \;
+            sudo rsync -av --copy-links --exclude="*/" "./." "${ARTIFACTS}/"
+            sudo chown -R "$(whoami):$(whoami)" "${ARTIFACTS}" && chmod -R 755 "${ARTIFACTS}"
+            #End
+            sudo podman stop "ubuntu-builder" 2>/dev/null ; sudo podman rm "ubuntu-builder"
+            popd >/dev/null 2>&1
+          continue-on-error: true
+  
+        - name: Archive Binaries (.tar)
+          run: |
+            #presets
+            set -x ; set +e
+            #-------------#
+            if [ -d "${ARTIFACTS}" ] && [ "$(find "${ARTIFACTS}" -mindepth 1 -print -quit 2>/dev/null)" ]; then
+               7z a -ttar -mx="9" -mmt="$(($(nproc)+1))" -bt "${ARTIFACTS}.tar" "${ARTIFACTS}" 2>/dev/null
+               sha256sum "${ARTIFACTS}.tar" && du -sh "${ARTIFACTS}.tar"
+               export HAS_RELEASE="TRUE"
+               echo "HAS_RELEASE=$HAS_RELEASE" >> "$GITHUB_ENV"
+            else
+               export HAS_RELEASE="FALSE"
+               echo "HAS_RELEASE=$HAS_RELEASE" >> "$GITHUB_ENV"
+                 exit 1
+              fi
+          continue-on-error: false
+  
+        - name: Upload_ARTIFACTS-x86_64-Linux
+          if: env.HAS_RELEASE == 'TRUE'
+          uses: actions/upload-artifact@v4
+          with:
+              name: ARTIFACTS-x86_64-Linux.tar
+              path: |
+                /tmp/ARTIFACTS-x86_64-Linux.tar
+#------------------------------------------------------------------------------------#
+    build-aarch64-Linux:
+        name: Build On (aarch64-Linux)
+        runs-on: ubuntu-latest
+        permissions:
+          contents: write
+
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v4
+            with:
+              path: main
+              filter: "blob:none" #https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone/
+    
+          - name: Install CoreUtils & Deps
+            run: |
+              #presets
+              set -x ; set +e
+              #-------------#     
+              export DEBIAN_FRONTEND="noninteractive"
+              sudo apt update -y -qq
+              sudo apt install 7zip b3sum bc binutils binutils-aarch64-linux-gnu coreutils curl dos2unix fdupes jq moreutils wget -y -qq
+              sudo apt-get install apt-transport-https apt-utils ca-certificates binutils binutils-aarch64-linux-gnu coreutils dos2unix fdupes gnupg2 jq moreutils p7zip-full rename rsync software-properties-common texinfo tmux upx util-linux wget -y -qq 2>/dev/null ; sudo apt-get update -y 2>/dev/null
+              #Do again, sometimes fails
+              sudo apt install 7zip b3sum bc binutils binutils-aarch64-linux-gnu coreutils curl dos2unix fdupes jq moreutils wget -y -qq
+              sudo apt-get install apt-transport-https apt-utils ca-certificates binutils binutils-aarch64-linux-gnu coreutils dos2unix fdupes gnupg2 jq moreutils p7zip-full rename rsync software-properties-common texinfo tmux upx util-linux wget -y -qq 2>/dev/null ; sudo apt-get update -y 2>/dev/null
+            continue-on-error: true
+
+          - name: Setup Env
+            run: |
+              #presets
+              set -x ; set +e
+              #-------------#
+              ##tmp
+              SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
+              echo "SYSTMP=${SYSTMP}" >> "$GITHUB_ENV"
+              ##Artifacts
+              #ARTIFACTS="${SYSTMP}/ARTIFACTS-$(uname -m)-$(uname -s)" && export "ARTIFACTS=${ARTIFACTS}"
+              ARTIFACTS="${SYSTMP}/ARTIFACTS-aarch64-Linux" && export "ARTIFACTS=${ARTIFACTS}"
+              echo "ARTIFACTS=${ARTIFACTS}" >> "$GITHUB_ENV"
+              ##Rclone
+              mkdir -p "$HOME/.config/rclone"
+              echo "NOPE" > "$HOME/.config/rclone/rclone.conf"              
+              ##User-Agent
+              USER_AGENT="$(curl -qfsSL 'https://pub.ajam.dev/repos/Azathothas/Wordlists/Misc/User-Agents/ua_chrome_macos_latest.txt')" && export USER_AGENT="$USER_AGENT"
+              echo "USER_AGENT=$USER_AGENT" >> "$GITHUB_ENV"
+            continue-on-error: true
+
+          - name: Install Addons
+            run: |
+              # Presets
+              set +x ; set +e
+              #--------------#
+              #https://github.com/Azathothas/Arsenal/blob/main/misc/Linux/install_bb_tools.sh
+              bash <(curl -qfsSL "https://pub.ajam.dev/repos/Azathothas/Arsenal/misc/Linux/install_bb_tools.sh")
+            continue-on-error: true
+
+          - name: Set up QEMU
+            uses: docker/setup-qemu-action@v3
+            continue-on-error: true
+          - name: Set up Docker Buildx
+            uses: docker/setup-buildx-action@v3
+            continue-on-error: true
+
+          - name: Run Container
+            run: |
+               # Presets
+               set +x ; set +e
+               #--------------#
+               sudo mkdir -p "/var/lib/containers/tmp"
+               sudo podman run --platform="linux/arm64" --detach --rm --privileged --network="bridge" --systemd="always" --volume="/var/lib/containers/tmp:/tmp" --tz="UTC" --pull="always" --name="ubuntu-builder" "docker.io/azathothas/ubuntu-systemd-base:latest"
+               sleep 10
+               BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
+               echo "BUILDER_ID=${BUILDER_ID}" >> "$GITHUB_ENV"
+               sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
+            continue-on-error: true
+
+          - name: Build Binaries (aarch64-Linux)
+            run: |
+              #presets
+              set -x ; set +e
+              #-------------#
+              #Build 
+              pushd "$(mktemp -d)" >/dev/null 2>&1
+              sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c '
+              #Setup ENV_VARS
+                 GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
+                 SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
+                 mkdir -p "$HOME/.config/rclone" && echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
+                 USER_AGENT="$(curl -qfsSL 'https://pub.ajam.dev/repos/Azathothas/Wordlists/Misc/User-Agents/ua_chrome_macos_latest.txt')" && export USER_AGENT="$USER_AGENT"
+              #Setup ENV_BUILD
+                 sudo mkdir -p "/build-bins"
+                 #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
+                 source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
+                 echo -e "\n\n\n" && env && echo -e "\n\n\n"
+              #Build
+                 pushd "$($TMPDIRS)" >/dev/null 2>&1
+                 git clone --filter "blob:none" "https://github.com/Azathothas/Toolpacks-Temp-Builds" && cd "./Toolpacks-Temp-Builds"
+                 bash "./build_on_$(uname -m)-$(uname -s).sh"
+                 echo -e "\n\n\n" && realpath "${BINDIR}" && ls "${BINDIR}" -lah
+                 echo -e "\n\n\n" && realpath "${BASEUTILSDIR}" && ls "${BASEUTILSDIR}" -lah
+                 popd >/dev/null 2>&1
+              #Copy
+                 sudo rsync -av --copy-links "${BINDIR}/." "/build-bins/"
+                 sudo rsync -av --copy-links "${BASEUTILSDIR}/." "/build-bins/"
+                 sudo ls "/build-bins" -lah
+              '
+              #Copy
+              sudo podman cp "ubuntu-builder:/build-bins/." "$(pwd)/"
+              find "." -maxdepth 1 -type f -exec sh -c 'file "{}"; du -sh "{}"' \;
+              sudo rsync -av --copy-links --exclude="*/" "./." "${ARTIFACTS}/"
+              sudo chown -R "$(whoami):$(whoami)" "${ARTIFACTS}" && chmod -R 755 "${ARTIFACTS}"
+              #End
+              sudo podman stop "ubuntu-builder" 2>/dev/null ; sudo podman rm "ubuntu-builder"
+              popd >/dev/null 2>&1
+            continue-on-error: true
+
+          - name: Archive Binaries (.tar)
+            run: |
+              #presets
+              set -x ; set +e
+              #-------------#
+              if [ -d "${ARTIFACTS}" ] && [ "$(find "${ARTIFACTS}" -mindepth 1 -print -quit 2>/dev/null)" ]; then
+                 7z a -ttar -mx="9" -mmt="$(($(nproc)+1))" -bt "${ARTIFACTS}.tar" "${ARTIFACTS}" 2>/dev/null
+                 sha256sum "${ARTIFACTS}.tar" && du -sh "${ARTIFACTS}.tar"
+                 export HAS_RELEASE="TRUE"
+                 echo "HAS_RELEASE=$HAS_RELEASE" >> "$GITHUB_ENV"
+              else
+                 export HAS_RELEASE="FALSE"
+                 echo "HAS_RELEASE=$HAS_RELEASE" >> "$GITHUB_ENV"
+                 exit 1
+              fi
+            continue-on-error: false
+    
+          - name: Upload_ARTIFACTS-aarch64-Linux
+            if: env.HAS_RELEASE == 'TRUE'
+            uses: actions/upload-artifact@v4
+            with:
+                name: ARTIFACTS-aarch64-Linux.tar
+                path: |
+                  /tmp/ARTIFACTS-aarch64-Linux.tar
+#------------------------------------------------------------------------------------#
+    create-release:
+      name: Create ARTIFACTS Release
+      runs-on: ubuntu-latest
+      needs: [build-x86_64-Linux, build-aarch64-Linux]
+      permissions: write-all      
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: main
+          filter: "blob:none"
+
+      - name: Install CoreUtils & Deps
+        run: |
+          #presets
+          set -x ; set +e
+          #-------------#     
+          export DEBIAN_FRONTEND="noninteractive"
+          sudo apt update -y -qq
+          sudo apt install 7zip b3sum bc binutils binutils-aarch64-linux-gnu coreutils curl dos2unix fdupes jq moreutils wget -y -qq
+          sudo apt-get install apt-transport-https apt-utils ca-certificates binutils binutils-aarch64-linux-gnu coreutils dos2unix fdupes gnupg2 jq moreutils p7zip-full rename rsync software-properties-common texinfo tmux upx util-linux wget -y -qq 2>/dev/null ; sudo apt-get update -y 2>/dev/null
+          #Do again, sometimes fails
+          sudo apt install 7zip b3sum bc binutils binutils-aarch64-linux-gnu coreutils curl dos2unix fdupes jq moreutils wget -y -qq
+          sudo apt-get install apt-transport-https apt-utils ca-certificates binutils binutils-aarch64-linux-gnu coreutils dos2unix fdupes gnupg2 jq moreutils p7zip-full rename rsync software-properties-common texinfo tmux upx util-linux wget -y -qq2>/dev/null ; sudo apt-get update -y 2>/dev/null
+        continue-on-error: true
+
+      - name: Install Addons
+        run: |
+          # Presets
+          set +x ; set +e
+          #--------------#
+          #https://github.com/Azathothas/Arsenal/blob/main/misc/Linux/install_bb_tools.sh
+          bash <(curl -qfsSL "https://pub.ajam.dev/repos/Azathothas/Arsenal/misc/Linux/install_bb_tools.sh")
+        continue-on-error: true  
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/RELEASES
+
+      - name: Extract Artifacts
+        run: |
+          #presets
+          set -x ; set +e
+          #-------------#
+          ##list
+          cd "/tmp/RELEASES" && find "." -type f -name '*tar*' | xargs realpath
+          ##extract
+          cd "/tmp/RELEASES" && find "." -type f -name '*tar*' | xargs -I {} tar -xvf {}
+          ##ReAdd
+          find "." -type f -name '*aarch64-Linux*' ! -name '*.upx*' ! -name '*.tar' ! -name '*.xz' -print0 | xargs -0 tar --transform 's|.*/||' --transform 's/-aarch64-Linux//' -cvf "./aarch64-Linux.tar"
+          7z a -txz -mx="9" -mmt="$(($(nproc)+1))" -bt "./aarch64-Linux.tar.xz" "./aarch64-Linux.tar" 2>/dev/null
+          find "." -type f -name '*aarch64-Linux.upx*' ! -name '*.tar' ! -name '*.xz' -print0 | xargs -0 tar --transform 's|.*/||' --transform 's/-aarch64-Linux.upx//' -cvf "./aarch64-Linux.upx.tar"
+          7z a -txz -mx="9" -mmt="$(($(nproc)+1))" -bt "./aarch64-Linux.upx.tar.xz" "./aarch64-Linux.upx.tar" 2>/dev/null
+          find "." -type f -name '*x86_64-Linux*' ! -name '*.upx*' ! -name '*.tar' ! -name '*.xz' -print0 | xargs -0 tar --transform 's|.*/||' --transform 's/-x86_64-Linux//' -cvf "./x86_64-Linux.tar"
+          7z a -txz -mx="9" -mmt="$(($(nproc)+1))" -bt "./x86_64-Linux.tar.xz" "./x86_64-Linux.tar" 2>/dev/null
+          find "." -type f -name '*x86_64-Linux.upx*' ! -name '*.tar' ! -name '*.xz' -print0 | xargs -0 tar --transform 's|.*/||' --transform 's/-x86_64-Linux.upx//' -cvf "./x86_64-Linux.upx.tar"
+          7z a -txz -mx="9" -mmt="$(($(nproc)+1))" -bt "./x86_64-Linux.upx.tar.xz" "./x86_64-Linux.upx.tar" 2>/dev/null
+          ##VERSION
+          echo "${PKG_VERSION}" > "/tmp/RELEASES/VERSION.txt"
+          find "." -type f -name '*.txt' ! -name 'VERSION.txt' -delete
+          ##Move
+          find "." -type f ! -name '*.tar' ! -name '*.xz' -exec rsync -av --remove-source-files {} "./" 2>/dev/null \; 2>/dev/null
+          find "." -type d -empty -delete ; find "." -type f -name '*.sh' -delete
+          ##clean
+          find "./" -maxdepth 1 -type f | sort | grep -v -E '\.tar$|\.txt$|\.xz$' | xargs file | sort -u -o "./FILE.txt"
+          find "./" -maxdepth 1 -type f | sort | grep -v -E '\.tar$|\.txt$|\.xz$' | xargs sha256sum | sort -u -o "./SHA256SUM.txt"
+          ls . -lah
+        continue-on-error: true
+
+      - name: Get DateTime
+        run: |
+          #presets
+          set +x ; set +e
+          #-------------#        
+          #UTC
+          UTC_TIME=$(TZ='UTC' date +'%Y-%m-%d_%I:%M:%S_%p' | tr ' :-' '_')
+          echo "UTC_TIME=${UTC_TIME}" >> $GITHUB_ENV
+          #VERSION
+          PKG_VERSION=$(cat "/tmp/RELEASES/VERSION.txt")
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+        continue-on-error: true
+
+    #Snapshot
+      - name: Releaser
+        uses: softprops/action-gh-release@v2.0.8
+        with:
+          name: "ARTIFACTS_${{ env.UTC_TIME }} "
+          tag_name: "${{ env.UTC_TIME }}"
+          prerelease: false
+          draft: false
+          generate_release_notes: false
+          make_latest: false
+          files: |
+            /tmp/RELEASES/*
+        continue-on-error: true
+#------------------------------------------------------------------------------------#
