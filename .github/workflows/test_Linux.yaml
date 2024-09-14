@@ -2,8 +2,8 @@ name: 🛍️ Test 📦 (aarch64 || x86_64) Linux Build 📦🗄️
 on:
   workflow_dispatch:
 env:
-  SKIP_X86_64: "YES" #YES--> SKip x86_64-Linux Build
-  SKIP_AARCH64: "YES" #YES--> SKip aarch64-Linux Build
+  SKIP_X86_64: "NO" #YES--> SKip x86_64-Linux Build
+  SKIP_AARCH64: "NO" #YES--> SKip aarch64-Linux Build
 #------------------------------------------------------------------------------------#
 jobs:
     build-x86_64-Linux:
