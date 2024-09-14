@@ -19,20 +19,44 @@ fi
 
 #-------------------------------------------------------#
 ##Main
-SKIP_BUILD="NO" #YES, in case of deleted repos, broken builds etc
+SKIP_BUILD="YES" #Takes > 1 HR
 if [ "$SKIP_BUILD" == "NO" ]; then
-      #hurl : Hurl, run and test HTTP requests with plain text. 
-     export BIN="hurl" #Name of final binary/pkg/cli, sometimes differs from $REPO
-     export SOURCE_URL="https://github.com/Orange-OpenSource/hurl" #github/gitlab/homepage/etc for $BIN
+    #imagemagick : A software suite to create, edit, compose, or convert bitmap images
+     export BIN="imagemagick"
+     export SOURCE_URL="https://github.com/ImageMagick/ImageMagick"
      echo -e "\n\n [+] (Building | Fetching) $BIN :: $SOURCE_URL\n"
-      #Build 
+     #-------------------------------------------------------#
+      ##Build:
        pushd "$($TMPDIRS)" >/dev/null 2>&1
-       NIXPKGS_ALLOW_BROKEN="1" NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM="1" nix-build '<nixpkgs>' --attr "pkgsStatic.hurl" --cores "$(($(nproc)+1))" --max-jobs "$(($(nproc)+1))" --log-format bar-with-logs
-       sudo strip "./result/bin/hurl" ; file "./result/bin/hurl" && du -sh "./result/bin/hurl"
-       sudo strip "./result/bin/hurlfmt" ; file "./result/bin/hurlfmt" && du -sh "./result/bin/hurlfmt"
-       cp "./result/bin/hurl" "$BINDIR/hurl"
-       cp "./result/bin/hurlfmt" "$BINDIR/hurlfmt"
-       nix-collect-garbage >/dev/null 2>&1 ; popd >/dev/null 2>&1
+       docker stop "alpine-builder" 2>/dev/null ; docker rm "alpine-builder" 2>/dev/null
+       docker run --privileged --net="host" --name "alpine-builder" "alpine:latest" \
+        sh -c '
+        #Setup ENV
+         mkdir -p "/build-bins" && cd "$(mktemp -d)" >/dev/null 2>&1
+         apk update && apk upgrade --no-interactive 2>/dev/null
+        #CoreUtils 
+         apk add alpine-base coreutils croc curl file git jq moreutils nano ncdu rsync sudo tar util-linux 7zip --latest --upgrade --no-interactive 2>/dev/null
+        #https://github.com/leleliu008/ppkg
+        #https://github.com/leleliu008/ppkg-package-manually-build/blob/master/.github/workflows/manually-build-for-linux-musl.yml
+         sudo curl -qfsSL "https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg" -o "/usr/local/bin/ppkg" && sudo chmod a+x "/usr/local/bin/ppkg"
+         ppkg setup --syspm ; ppkg setup ; ppkg update
+         ppkg formula-repo-add "main-core" "https://github.com/leleliu008/ppkg-formula-repository-official-core" --enable
+         ppkg formula-repo-conf "main-core" --url="https://github.com/leleliu008/ppkg-formula-repository-official-core" --enable --pin ; ppkg formula-repo-list
+        #Build
+         ppkg install "imagemagick" --profile="release" -j "$(($(nproc)+1))" --static
+         ppkg tree "imagemagick" --dirsfirst -L 5
+        #Copy
+         ppkg tree "imagemagick" --dirsfirst -L 1 | grep -o "/.*/.*" 2>/dev/null | tail -n1 | xargs realpath |xargs -I{} sudo rsync -av --copy-links --exclude="*/" "{}/bin/." "/build-bins/."
+        '
+      #Copy & Meta
+       mkdir -p "$BASEUTILSDIR/imagemagick"
+       docker cp "alpine-builder:/build-bins/." "$(pwd)/"
+       find "." -maxdepth 1 -type f -exec file -i "{}" \; | grep "application/.*executable" | cut -d":" -f1 | xargs realpath
+       #Meta
+       find "." -maxdepth 1 -type f -exec sh -c 'file "{}"; du -sh "{}"' \;
+       sudo rsync -av --copy-links --exclude="*/" "./." "$BASEUTILSDIR/imagemagick/"
+       unset TMP_METADIR B3SUM DESCRIPTION EXTRA_BINS REPO_URL SHA256 WEB_URL
+       find "$BASEUTILSDIR" -type f -size 0 -delete ; popd >/dev/null 2>&1
 fi
 #-------------------------------------------------------#
 
