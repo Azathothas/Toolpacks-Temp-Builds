@@ -1,7 +1,8 @@
 - ### Toolpacks-Temp-Builds
 > - This repo is to test build scripts for https://github.com/Azathothas/Toolpacks
 > - To get started: [Fork this Repo](https://github.com/Azathothas/Toolpacks-Temp-Builds/fork) `>>` Make changes to the <ins>Releated Build Script</ins> & <ins>Commit</ins> `>>` Run the <ins>Workflow</ins>
-> - After the workflow finishes, check the <ins>`Releases`</ins> for Artifacts & Uploaded Binaries
+> - After the workflow finishes, check the <ins>`Releases`</ins> for Artifacts & Uploaded Binaries.
+> - The binaries are usually renamed (`$(uname -m)-$(uname -s)`) & also contain `.upx` versions. They are <ins>never stripped</ins> to [avoid accidental corruption.](https://github.com/Azathothas/Toolpacks/blob/main/Docs/APPIMAGES.md#strip--objcopy) 
 > - You can [submit a PR](https://github.com/Azathothas/Toolpacks/compare) if the workflow runs successfully and the Released Binaries are Statically Linked & Work as expected.
 > - If the workflow fails, you can inspect the CI logs to check what went wrong. You can also [contact me](https://ajam.dev/contact) if additional help is required.
 
