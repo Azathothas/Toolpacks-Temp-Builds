@@ -389,9 +389,6 @@ jobs:
           7z a -txz -mx="9" -mmt="$(($(nproc)+1))" -bt "./x86_64-Linux.tar.xz" "./x86_64-Linux.tar" 2>/dev/null
           find "." -type f -name '*x86_64-Linux.upx*' ! -name '*.tar' ! -name '*.xz' -print0 | xargs -0 tar --transform 's|.*/||' --transform 's/-x86_64-Linux.upx//' -cvf "./x86_64-Linux.upx.tar"
           7z a -txz -mx="9" -mmt="$(($(nproc)+1))" -bt "./x86_64-Linux.upx.tar.xz" "./x86_64-Linux.upx.tar" 2>/dev/null
-          ##VERSION
-          echo "${PKG_VERSION}" > "/tmp/RELEASES/VERSION.txt"
-          find "." -type f -name '*.txt' ! -name 'VERSION.txt' -delete
           ##Move
           find "." -type f ! -name '*.tar' ! -name '*.xz' -exec rsync -av --remove-source-files {} "./" 2>/dev/null \; 2>/dev/null
           find "." -type d -empty -delete ; find "." -type f -name '*.sh' -delete
