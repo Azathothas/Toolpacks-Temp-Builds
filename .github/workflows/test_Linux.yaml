@@ -405,7 +405,7 @@ jobs:
           #-------------#        
           #UTC
           cd "$GITHUB_WORKSPACE/main"
-          L_COMMIT="$(git log -2 --pretty="%B" | grep -v "Merge branch" | sed 's/[[:space:]]\+/_/g' | tr -d '[:space:]')" && export L_COMMIT="${L_COMMIT}"
+          L_COMMIT="$(git log -2 --pretty="%B" | grep -v "Merge branch" | sed 's/[[:space:]]\+/_/g' | tr -d '[:space:]' | head -n 1)" && export L_COMMIT="${L_COMMIT}"
           echo "L_COMMIT=${L_COMMIT}" >> "${GITHUB_ENV}"
         continue-on-error: true
 
