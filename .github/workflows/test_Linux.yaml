@@ -103,6 +103,8 @@ jobs:
             sudo podman exec -u "runner" "${BUILDER_ID}" bash -c '
             set +e ; set -x
             #Setup ENV_VARS
+               USER="$(whoami)" && export USER="${USER}"
+               HOME="$(getent passwd ${USER} | cut -d: -f6)" && export HOME="${HOME}"
                GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
                SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
                mkdir -p "$HOME/.config/rclone" && echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
@@ -268,6 +270,8 @@ jobs:
               sudo podman exec -u "runner" "${BUILDER_ID}" bash -c '
               set +e ; set -x
               #Setup ENV_VARS
+                 USER="$(whoami)" && export USER="${USER}"
+                 HOME="$(getent passwd ${USER} | cut -d: -f6)" && export HOME="${HOME}"
                  GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
                  SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
                  mkdir -p "$HOME/.config/rclone" && echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
