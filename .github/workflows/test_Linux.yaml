@@ -110,8 +110,9 @@ jobs:
             #Setup ENV_BUILD
                sudo mkdir -p "/build-bins"
                #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
+               sudo chown "${USER}:docker" "/var/run/docker.sock"
+               sudo chown -R "${USER}:docker" "/var/run/docker"
                source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
-               newgrp docker
                echo -e "\n\n\n" && env && echo -e "\n\n\n"
             #Build
                pushd "$($TMPDIRS)" >/dev/null 2>&1
@@ -274,8 +275,9 @@ jobs:
               #Setup ENV_BUILD
                  sudo mkdir -p "/build-bins"
                  #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
+                 sudo chown "${USER}:docker" "/var/run/docker.sock"
+                 sudo chown -R "${USER}:docker" "/var/run/docker"
                  source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
-                 newgrp docker 
                  echo -e "\n\n\n" && env && echo -e "\n\n\n"
               #Build
                  pushd "$($TMPDIRS)" >/dev/null 2>&1
