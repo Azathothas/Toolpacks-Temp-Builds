@@ -119,7 +119,7 @@ jobs:
                sudo rsync -av --copy-links "${BINDIR}/." "/build-bins/"
                sudo rsync -av --copy-links "${BASEUTILSDIR}/." "/build-bins/"
             #Meta
-               find "/build-bins/" -type f -exec bash -c 'mv "$0" "${0}-$(uname -m)-$(uname -s)"' {} \; 2>/dev/null
+               find "/build-bins/" -type f ! -name "*.txt" -exec  bash -c '\''mv "$0" "${0}-$(uname -m)-$(uname -s)"'\'' {} \; 2>/dev/null
                find "/build-bins/" -type f | xargs realpath | xargs -I {} upx --best "{}" -f --force-overwrite -o"{}.upx" -qq 2>/dev/null
                sudo ls "/build-bins" -lah ; set +x
             '
@@ -282,7 +282,7 @@ jobs:
                  sudo rsync -av --copy-links "${BINDIR}/." "/build-bins/"
                  sudo rsync -av --copy-links "${BASEUTILSDIR}/." "/build-bins/"
               #Meta
-                 find "/build-bins/" -type f -exec bash -c 'mv "$0" "${0}-$(uname -m)-$(uname -s)"' {} \; 2>/dev/null
+                 find "/build-bins/" -type f ! -name "*.txt" -exec  bash -c '\''mv "$0" "${0}-$(uname -m)-$(uname -s)"'\'' {} \; 2>/dev/null
                  find "/build-bins/" -type f | xargs realpath | xargs -I {} upx --best "{}" -f --force-overwrite -o"{}.upx" -qq 2>/dev/null
                  sudo ls "/build-bins" -lah ; set +x
               '
