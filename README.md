@@ -2,12 +2,12 @@
 > - This repo is to test build scripts for https://github.com/Azathothas/Toolpacks
 > - To get started: [Fork this Repo](https://github.com/Azathothas/Toolpacks-Temp-Builds/fork) `>>` Make changes to the <ins>Releated Build Script</ins> & <ins>Commit</ins> `>>` Run the <ins>Workflow</ins>
 > - After the workflow finishes, check the <ins>`Releases`</ins> for Artifacts & Uploaded Binaries
-> - You can submit a PR if the workflow runs successfully and the Released Binaries are Statically Linked & Work as expected.
+> - You can [submit a PR](https://github.com/Azathothas/Toolpacks/compare) if the workflow runs successfully and the Released Binaries are Statically Linked & Work as expected.
 > - If the workflow fails, you can inspect the CI logs to check what went wrong. You can also [contact me](https://ajam.dev/contact) if additional help is required.
 
 - #### Under the Hood
-> - The worklfow runs the same [containers](https://github.com/Azathothas/Toolpacks/tree/main/.github/runners) that [Toolpacks'](https://github.com/Azathothas/Toolpacks) servers.
-> - This means, it contains the same Build Environment, thus is perfect for testing if a script runs successfully.
+> - The worklfow runs the same [containers](https://github.com/Azathothas/Toolpacks/tree/main/.github/runners) that [Toolpacks'](https://github.com/Azathothas/Toolpacks) servers run.
+> - This means, it contains the same Build Environment, thus is perfect for testing whether a script runs & builds successfully.
 > - You can just copy paste any of the [build scripts](https://github.com/Azathothas/Toolpacks/tree/main/.github/scripts) here and they will 100% run exactly like they do on [Toolpacks'](https://github.com/Azathothas/Toolpacks) servers.
 > - If you don't want to use [Github-Actions](https://github.com/Azathothas/Toolpacks-Temp-Builds/actions), You can also do this manually on your machine by following the [Instruction](https://github.com/Azathothas/Toolpacks/tree/main/Docs#how-to-setup--configure-local-build-environment) here: https://github.com/Azathothas/Toolpacks/tree/main/Docs#how-to-setup--configure-local-build-environment
 
