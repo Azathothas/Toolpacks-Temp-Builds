@@ -111,6 +111,7 @@ jobs:
                sudo mkdir -p "/build-bins"
                #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
                source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
+               sudo setfacl -m "user:${USER}:rw" "/var/run/docker.sock"
                echo -e "\n\n\n" && env && echo -e "\n\n\n"
             #Build
                pushd "$($TMPDIRS)" >/dev/null 2>&1
@@ -274,6 +275,7 @@ jobs:
                  sudo mkdir -p "/build-bins"
                  #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
                  source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
+                 sudo setfacl -m "user:${USER}:rw" "/var/run/docker.sock"
                  echo -e "\n\n\n" && env && echo -e "\n\n\n"
               #Build
                  pushd "$($TMPDIRS)" >/dev/null 2>&1
