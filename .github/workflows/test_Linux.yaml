@@ -89,7 +89,7 @@ jobs:
              sleep 10
              BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
              echo "BUILDER_ID=${BUILDER_ID}" >> "${GITHUB_ENV}"
-             sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
+             sudo podman exec -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
           continue-on-error: true
 
         - name: Build Binaries (x86_64-Linux)
@@ -100,7 +100,7 @@ jobs:
             #-------------#
             #Build 
             pushd "$(mktemp -d)" >/dev/null 2>&1
-            sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c '
+            sudo podman exec -u "runner" "${BUILDER_ID}" bash -c '
             set +e ; set -x
             #Setup ENV_VARS
                GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
@@ -252,7 +252,7 @@ jobs:
                sleep 10
                BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
                echo "BUILDER_ID=${BUILDER_ID}" >> "${GITHUB_ENV}"
-               sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
+               sudo podman exec -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
             continue-on-error: true
 
           - name: Build Binaries (aarch64-Linux)
@@ -263,7 +263,7 @@ jobs:
               #-------------#
               #Build 
               pushd "$(mktemp -d)" >/dev/null 2>&1
-              sudo podman exec -it -u "runner" "${BUILDER_ID}" bash -c '
+              sudo podman exec -u "runner" "${BUILDER_ID}" bash -c '
               set +e ; set -x
               #Setup ENV_VARS
                  GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
