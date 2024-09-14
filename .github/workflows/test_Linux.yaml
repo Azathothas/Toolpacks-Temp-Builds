@@ -157,7 +157,7 @@ jobs:
                 /tmp/ARTIFACTS-x86_64-Linux.tar
 
         - name: Skip
-          if: SKIP_X86_64 == 'YES'
+          if: env.SKIP_X86_64 == 'YES'
           run: |
             #presets
             set -x ; set +e
@@ -317,7 +317,7 @@ jobs:
                   /tmp/ARTIFACTS-aarch64-Linux.tar
 
           - name: Skip
-            if: SKIP_AARCH64 == 'YES'
+            if: env.SKIP_AARCH64 == 'YES'
             run: |
               #presets
               set -x ; set +e
