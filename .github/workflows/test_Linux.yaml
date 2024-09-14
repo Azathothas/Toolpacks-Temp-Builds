@@ -89,6 +89,7 @@ jobs:
              sleep 10
              BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
              echo "BUILDER_ID=${BUILDER_ID}" >> "${GITHUB_ENV}"
+             sudo podman exec -u "runner" "${BUILDER_ID}" bash -c 'sudo groupadd docker 2>/dev/null ; sudo usermod -aG docker "runner" 2>/dev/null'
              sudo podman exec -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
           continue-on-error: true
 
@@ -111,7 +112,6 @@ jobs:
                sudo mkdir -p "/build-bins"
                #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
                source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
-               sudo setfacl -m "user:${USER}:rw" "/var/run/docker.sock"
                echo -e "\n\n\n" && env && echo -e "\n\n\n"
             #Build
                pushd "$($TMPDIRS)" >/dev/null 2>&1
@@ -253,6 +253,7 @@ jobs:
                sleep 10
                BUILDER_ID="$(sudo podman ps --filter "name=ubuntu-builder" --format json | jq -r '.[] | select(.Image == "docker.io/azathothas/ubuntu-systemd-base:latest") | .Id')" && export BUILDER_ID="${BUILDER_ID}"
                echo "BUILDER_ID=${BUILDER_ID}" >> "${GITHUB_ENV}"
+               sudo podman exec -u "runner" "${BUILDER_ID}" bash -c 'sudo groupadd docker 2>/dev/null ; sudo usermod -aG docker "runner" 2>/dev/null'
                sudo podman exec -u "runner" "${BUILDER_ID}" bash -c 'curl -qfsSL "https://bin.ajam.dev/$(uname -m)/neofetch" | bash ; echo -e "\n\n\n" && env && echo -e "\n\n\n"'
             continue-on-error: true
 
@@ -275,7 +276,6 @@ jobs:
                  sudo mkdir -p "/build-bins"
                  #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
                  source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
-                 sudo setfacl -m "user:${USER}:rw" "/var/run/docker.sock"
                  echo -e "\n\n\n" && env && echo -e "\n\n\n"
               #Build
                  pushd "$($TMPDIRS)" >/dev/null 2>&1
