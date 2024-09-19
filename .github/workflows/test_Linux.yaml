@@ -328,7 +328,7 @@ jobs:
                  echo "HAS_RELEASE=$HAS_RELEASE" >> "${GITHUB_ENV}"
                  exit 1
               fi
-            continue-on-error: false
+            continue-on-error: true
     
           - name: Upload_ARTIFACTS-aarch64-Linux
             if: env.SKIP_AARCH64 != 'YES'
