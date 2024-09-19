@@ -10,7 +10,7 @@ jobs:
       name: Build On (x86_64-Linux)
       runs-on: ubuntu-latest
       permissions:
-        contents: write
+        contents: read
       
       steps:
         - name: Checkout repository
@@ -182,7 +182,7 @@ jobs:
         name: Build On (aarch64-Linux)
         runs-on: ubuntu-latest
         permissions:
-          contents: write
+          contents: read
 
         steps:
           - name: Checkout repository
