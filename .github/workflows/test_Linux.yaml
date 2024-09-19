@@ -116,8 +116,12 @@ jobs:
                #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
                sudo chown "${USER}:docker" "/var/run/docker.sock"
                sudo chown -R "${USER}:docker" "/var/run/docker"
-               source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
+               source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh") && sleep 10
                echo -e "\n\n\n" && env && echo -e "\n\n\n"
+               if ! sudo systemctl is-active --quiet docker; then
+                   sudo service docker restart >/dev/null 2>&1 ; sleep 10
+               fi
+               sudo systemctl status "docker.service" --no-pager
             #Build
                pushd "$($TMPDIRS)" >/dev/null 2>&1
                git clone --filter "blob:none" "https://github.com/${GITHUB_REPOSITORY}" && cd "./$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
@@ -285,8 +289,12 @@ jobs:
                  #bash <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_$(uname -s)/init_debian.sh")
                  sudo chown "${USER}:docker" "/var/run/docker.sock"
                  sudo chown -R "${USER}:docker" "/var/run/docker"
-                 source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh")
+                 source <(curl -qfsSL "https://raw.githubusercontent.com/Azathothas/Toolpacks/main/.github/scripts/$(uname -m)_Linux/env.sh") && sleep 10
                  echo -e "\n\n\n" && env && echo -e "\n\n\n"
+                 if ! sudo systemctl is-active --quiet docker; then
+                     sudo service docker restart >/dev/null 2>&1 ; sleep 10
+                 fi
+                 sudo systemctl status "docker.service" --no-pager
               #Build
                  pushd "$($TMPDIRS)" >/dev/null 2>&1
                  git clone --filter "blob:none" "https://github.com/${GITHUB_REPOSITORY}" && cd "./$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
