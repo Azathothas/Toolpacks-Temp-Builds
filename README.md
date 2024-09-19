@@ -13,5 +13,6 @@
 > - If you don't want to use [Github-Actions](https://github.com/Azathothas/Toolpacks-Temp-Builds/actions), You can also do this manually on your machine by following the [Instruction](https://github.com/Azathothas/Toolpacks/tree/main/Docs#how-to-setup--configure-local-build-environment) here: https://github.com/Azathothas/Toolpacks/tree/main/Docs#how-to-setup--configure-local-build-environment
 
 - #### Things that don't work
-> - There's a hardcoded `dummy` <ins>GITHUB_TOKEN</ins>, so scripts that rely on this will fail.
+> - There's a hardcoded `dummy` <ins>GITHUB_TOKEN</ins>, so scripts that rely on this (eget et.al) will fail.
+> - You will have to <ins>comment-out/remove-sections</ins> from the script if they contain reference to <ins>using rclone to upload</ins> to [bin.ajam.dev](https://bin.ajam.dev/)
 > - As of now, Github hasn't released their aarch64 runners to the public, so Podman uses QEMU to emulate it. This means build (aarch64) will take much longer & may not work as expected.
