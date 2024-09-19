@@ -94,18 +94,20 @@ jobs:
 
         - name: Build Binaries (x86_64-Linux)
           if: env.SKIP_X86_64 != 'YES'
+          env:
+            GITHUB_TOKEN: "${{ github.token }}"
           run: |
             #presets
             set -x ; set +e
             #-------------#
             #Build 
             pushd "$(mktemp -d)" >/dev/null 2>&1
-            sudo podman exec -u "runner" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" "${BUILDER_ID}" bash -c '
+            sudo podman exec -u "runner" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" -e GITHUB_TOKEN="${GITHUB_TOKEN}" "${BUILDER_ID}" bash -c '
             set +e ; set -x
             #Setup ENV_VARS
                USER="$(whoami)" && export USER="${USER}"
                HOME="$(getent passwd ${USER} | cut -d: -f6)" && export HOME="${HOME}"
-               GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
+               #GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}" ; eget --rate
                SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
                mkdir -p "$HOME/.config/rclone" && echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
                USER_AGENT="$(curl -qfsSL 'https://pub.ajam.dev/repos/Azathothas/Wordlists/Misc/User-Agents/ua_chrome_macos_latest.txt')" && export USER_AGENT="$USER_AGENT"
@@ -261,18 +263,20 @@ jobs:
 
           - name: Build Binaries (aarch64-Linux)
             if: env.SKIP_AARCH64 != 'YES'
+            env:
+              GITHUB_TOKEN: "${{ github.token }}"
             run: |
               #presets
               set -x ; set +e
               #-------------#
               #Build 
               pushd "$(mktemp -d)" >/dev/null 2>&1
-              sudo podman exec -u "runner" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" "${BUILDER_ID}" bash -c '
+              sudo podman exec -u "runner" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" -e GITHUB_TOKEN="${GITHUB_TOKEN}" "${BUILDER_ID}" bash -c '
               set +e ; set -x
               #Setup ENV_VARS
                  USER="$(whoami)" && export USER="${USER}"
                  HOME="$(getent passwd ${USER} | cut -d: -f6)" && export HOME="${HOME}"
-                 GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}"
+                 #GITHUB_TOKEN="DUMMY_TOKEN" && export GITHUB_TOKEN="${GITHUB_TOKEN}" ; eget --rate
                  SYSTMP="$(dirname $(mktemp -u))" && export SYSTMP="${SYSTMP}"
                  mkdir -p "$HOME/.config/rclone" && echo "NOPE" > "$HOME/.config/rclone/rclone.conf"
                  USER_AGENT="$(curl -qfsSL 'https://pub.ajam.dev/repos/Azathothas/Wordlists/Misc/User-Agents/ua_chrome_macos_latest.txt')" && export USER_AGENT="$USER_AGENT"
