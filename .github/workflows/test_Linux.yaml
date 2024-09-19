@@ -100,7 +100,7 @@ jobs:
             #-------------#
             #Build 
             pushd "$(mktemp -d)" >/dev/null 2>&1
-            sudo podman exec -u "runner" "${BUILDER_ID}" bash -c '
+            sudo podman exec -u "runner" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" "${BUILDER_ID}" bash -c '
             set +e ; set -x
             #Setup ENV_VARS
                USER="$(whoami)" && export USER="${USER}"
@@ -118,7 +118,7 @@ jobs:
                echo -e "\n\n\n" && env && echo -e "\n\n\n"
             #Build
                pushd "$($TMPDIRS)" >/dev/null 2>&1
-               git clone --filter "blob:none" "https://github.com/Azathothas/Toolpacks-Temp-Builds" && cd "./Toolpacks-Temp-Builds"
+               git clone --filter "blob:none" "https://github.com/${GITHUB_REPOSITORY}" && cd "./$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
                bash "./build_on_$(uname -m)-$(uname -s).sh"
                echo -e "\n\n\n" && realpath "${BINDIR}" && ls "${BINDIR}" -lah
                echo -e "\n\n\n" && realpath "${BASEUTILSDIR}" && ls "${BASEUTILSDIR}" -lah
@@ -267,7 +267,7 @@ jobs:
               #-------------#
               #Build 
               pushd "$(mktemp -d)" >/dev/null 2>&1
-              sudo podman exec -u "runner" "${BUILDER_ID}" bash -c '
+              sudo podman exec -u "runner" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" "${BUILDER_ID}" bash -c '
               set +e ; set -x
               #Setup ENV_VARS
                  USER="$(whoami)" && export USER="${USER}"
@@ -285,7 +285,7 @@ jobs:
                  echo -e "\n\n\n" && env && echo -e "\n\n\n"
               #Build
                  pushd "$($TMPDIRS)" >/dev/null 2>&1
-                 git clone --filter "blob:none" "https://github.com/Azathothas/Toolpacks-Temp-Builds" && cd "./Toolpacks-Temp-Builds"
+                 git clone --filter "blob:none" "https://github.com/${GITHUB_REPOSITORY}" && cd "./$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
                  bash "./build_on_$(uname -m)-$(uname -s).sh"
                  echo -e "\n\n\n" && realpath "${BINDIR}" && ls "${BINDIR}" -lah
                  echo -e "\n\n\n" && realpath "${BASEUTILSDIR}" && ls "${BASEUTILSDIR}" -lah
