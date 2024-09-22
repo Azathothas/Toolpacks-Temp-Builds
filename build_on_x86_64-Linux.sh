@@ -21,32 +21,43 @@ fi
 ##Main
 export SKIP_BUILD="NO" #YES, in case of deleted repos, broken builds etc
 if [ "$SKIP_BUILD" == "NO" ]; then
-    #toru : Bittorrent streaming CLI tool. Stream anime torrents, real-time with no waiting for downloads
-     export BIN="toru"
-     export SOURCE_URL="https://github.com/sweetbbak/toru"
+    #simplex-chat : SimpleX Chat terminal (console) app
+     export BIN="simplex-chat"
+     export SOURCE_URL="https://github.com/simplex-chat/simplex-chat"
      echo -e "\n\n [+] (Building | Fetching) $BIN :: $SOURCE_URL\n"
-      #Build (alpine-musl)
+      ##Build:
        pushd "$($TMPDIRS)" >/dev/null 2>&1
        docker stop "alpine-builder" 2>/dev/null ; docker rm "alpine-builder" 2>/dev/null
-       docker run --privileged --net="host" --name "alpine-builder" "azathothas/alpine-builder:latest" \
-        bash -c '
+       docker run --privileged --net="host" --name "alpine-builder" "alpine:latest" \
+        sh -c '
         #Setup ENV
-         mkdir -p "/build-bins" && pushd "$(mktemp -d)" >/dev/null 2>&1
+         mkdir -p "/build-bins" && cd "$(mktemp -d)" >/dev/null 2>&1
+         apk update && apk upgrade --no-interactive 2>/dev/null
+        #CoreUtils 
+         apk add autoconf binutils build-base clang clang-static cmake coreutils croc curl elfutils file gawk gcc gettext git iputils jq linux-tools make mold moreutils musl musl-dev musl-utils nano ncdu perl pkgconfig procps python3 rsync sudo tar util-linux xz zig zstd 7zip --no-interactive 2>/dev/null
+        #https://github.com/leleliu008/ppkg
+        #https://github.com/leleliu008/ppkg-package-manually-build/blob/master/.github/workflows/manually-build-for-linux-musl.yml
+         sudo curl -qfsSL "https://raw.githubusercontent.com/leleliu008/ppkg/master/ppkg" -o "/usr/local/bin/ppkg" && sudo chmod a+x "/usr/local/bin/ppkg"
+         ppkg setup --syspm ; ppkg setup ; ppkg update
+         ppkg formula-repo-add "main-core" "https://github.com/leleliu008/ppkg-formula-repository-official-core" --enable
+         ppkg formula-repo-conf "main-core" --url="https://github.com/leleliu008/ppkg-formula-repository-official-core" --enable --pin ; ppkg formula-repo-list 
         #Build
-         git clone --quiet --filter "blob:none" "https://github.com/sweetbbak/toru" && cd "./toru"
-         GOOS="linux" GOARCH="amd64" CGO_ENABLED="1" CGO_CFLAGS="-O2 -flto=auto -fPIE -fpie -static -w -pipe" go build -v -trimpath -buildmode="pie" -ldflags="-s -w -buildid= -linkmode=external -extldflags '\''-s -w -static-pie -Wl,--build-id=none'\''" "./cmd/toru"
-        #strip & info
-         find "." -maxdepth 1 -type f -exec file -i "{}" \; | grep "application/.*executable" | cut -d":" -f1 | xargs realpath | xargs -I {} cp --force {} /build-bins/
+         ppkg install "simplex-chat" --profile="release" -j "$(($(nproc)+1))" --static
+         ppkg tree "simplex-chat" --dirsfirst -L 5
+        #Copy
+         ppkg tree "simplex-chat" --dirsfirst -L 1 | grep -o "/.*/.*" 2>/dev/null | tail -n1 | xargs realpath |xargs -I{} sudo rsync -av --copy-links --exclude="*/" "{}/bin/." "/build-bins/."
          popd >/dev/null 2>&1
         '
-      #Copy
-       docker cp "alpine-builder:/build-bins/." "$(pwd)/" ; find "." -maxdepth 1 -type f -exec file -i "{}" \; | grep "application/.*executable" | cut -d":" -f1 | xargs realpath
+      #Copy & Meta
+       docker cp "alpine-builder:/build-bins/." "$(pwd)/"
+       find "." -maxdepth 1 -type f -exec file -i "{}" \; | grep "application/.*executable" | cut -d":" -f1 | xargs realpath
        #Meta
        find "." -maxdepth 1 -type f -exec sh -c 'file "{}"; du -sh "{}"' \;
        sudo rsync -av --copy-links --exclude="*/" "./." "$BINDIR"
       #Delete Containers
        docker stop "alpine-builder" 2>/dev/null ; docker rm "alpine-builder"
        popd >/dev/null 2>&1
+
 fi
 #-------------------------------------------------------#
 
